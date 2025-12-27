@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal 180 Coaching Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #009b3a; --secondary: #fed100; --dark: #000000; --light: #f4f4f4; --danger: #d9534f; --blue: #2e59a8; --orange: #ff8c00; --pink: #e91e63; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 15px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
+        header { text-align: center; border-bottom: 5px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
+        
+        #successBadge { display: none; position: absolute; top: -10px; right: -10px; background: var(--secondary); color: var(--dark); padding: 15px; border-radius: 50%; font-weight: bold; border: 4px solid var(--primary); transform: rotate(15deg); box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 100; text-align: center; line-height: 1.2; }
+
+        .nav-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; background: #eee; padding: 10px; border-radius: 15px; }
+        .week-strip { display: flex; flex: 1; justify-content: space-between; gap: 5px; }
+        .day-node { flex: 1; padding: 8px 2px; border: none; background: white; border-radius: 10px; cursor: pointer; text-align: center; font-size: 0.8em; border: 2px solid transparent; }
+        .day-node span { display: block; font-weight: bold; font-size: 1.1em; }
+        .day-node.active { background: var(--primary); color: white; border-color: var(--secondary); }
+        .nav-btn { background: var(--dark); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 90px; padding: 12px; border: none; background: #ddd; cursor: pointer; font-weight: bold; border-radius: 10px; }
+        .tab-btn.active { background: var(--dark); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+
+        .timeline-item { display: grid; grid-template-columns: 85px 1fr; gap: 15px; margin-bottom: 12px; padding: 15px; border-radius: 12px; border-left: 6px solid #ccc; background: #fff; }
+        .time-label { font-weight: bold; color: #555; font-size: 0.85em; display: flex; align-items: center; }
+        .nutrition-card { border-left-color: var(--primary); background: #f0fdf4; }
+        .activity-card { border-left-color: var(--blue); background: #f0f7ff; }
+        .joint-card { border-left-color: var(--pink); background: #fff0f6; }
+        .pre-card { border-left-color: var(--orange); background: #fff9f0; }
+        .warning-card { border-left-color: var(--danger); background: #fff5f5; }
+        
+        .coach-tip { font-size: 0.85em; color: #444; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px; font-style: italic; }
+        .type-badge { font-size: 0.7em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-bottom: 5px; display: inline-block; color: white; }
+        
+        .save-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        /* Grocery Grid */
+        .grocery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .grocery-cat { background: #fffbe6; padding: 15px; border-radius: 12px; border: 1px solid #ffe58f; }
+        .grocery-cat h4 { margin-top: 0; color: #856404; border-bottom: 1px solid #ffe58f; padding-bottom: 5px; }
+        .grocery-cat ul { padding-left: 20px; font-size: 0.9em; }
+        
+        .sync-group { display: flex; gap: 10px; margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .sync-btn { flex: 1; padding: 10px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="successBadge">🏆<br>GOAL 180<br>CHAMP</div>
+    <header><h1 id="userHeader">Goal 180 Dashboard</h1></header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(event, 'log')">Timeline</button>
+        <button class="tab-btn" onclick="switchTab(event, 'stats')">Weight</button>
+        <button class="tab-btn" onclick="switchTab(event, 'shop')">Shopping</button>
+        <button class="tab-btn" onclick="switchTab(event, 'profile')">Profile</button>
+    </div>
+
+    <div id="log" class="tab-content active">
+        <div class="nav-controls">
+            <button class="nav-btn" onclick="changeWeek(-7)">◀</button>
+            <div class="week-strip" id="weekStrip"></div>
+            <button class="nav-btn" onclick="changeWeek(7)">▶</button>
+        </div>
+        <div id="dayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:10px; font-size: 1.2em;"></div>
+        <div id="timelineContainer"></div>
+        <button class="save-btn" onclick="saveDailyLog()">Save Progress</button>
+    </div>
+
+    <div id="stats" class="tab-content">
+        <div style="padding:20px; background:white; border-radius:15px; border:1px solid #eee;">
+            <h3>📈 Weight Progress</h3>
+            <canvas id="weightChart"></canvas>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <input type="number" id="weightInput" placeholder="New Lbs" step="0.1" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ccc;">
+                <button onclick="updateWeight()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:10px;">Log</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="shop" class="tab-content">
+        <h3>🛒 Goal 180 Grocery Staples</h3>
+        <div class="grocery-grid">
+            <div class="grocery-cat">
+                <h4>🍎 Fruits & Snacks</h4>
+                <ul>
+                    <li>Apples & Berries (Fiber)</li>
+                    <li>Green Bananas (Starch)</li>
+                    <li>Greek Yogurt (Plain)</li>
+                    <li>Raw Almonds (Crunch)</li>
+                </ul>
+            </div>
+            <div class="grocery-cat">
+                <h4>🍗 Proteins</h4>
+                <ul>
+                    <li>Salmon & Saltfish</li>
+                    <li>Chicken Breast</li>
+                    <li>Eggs (Cage Free)</li>
+                    <li>ON Whey Protein</li>
+                </ul>
+            </div>
+            <div class="grocery-cat">
+                <h4>🥣 Pantry</h4>
+                <ul>
+                    <li>Cornmeal & Quick Oats</li>
+                    <li>Brown Rice & Red Peas</li>
+                    <li>Unsweetened Almond Milk</li>
+                    <li>Oxyshred Mango</li>
+                </ul>
+            </div>
+            <div class="grocery-cat">
+                <h4>🥬 Veggies</h4>
+                <ul>
+                    <li>Spring Salad Mix</li>
+                    <li>Okra & Callaloo</li>
+                    <li>Cabbage & Peppers</li>
+                    <li>Yellow Yam</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile" class="tab-content">
+        <h3>👤 Profile Settings</h3>
+        <div class="form-group"><label>Name</label><input type="text" id="userName"></div>
+        <div class="form-group"><label>Starting Weight (lbs)</label><input type="number" id="startWeight"></div>
+        <div class="form-group"><label>Target Weight (lbs)</label><input type="number" id="targetWeight"></div>
+        <button class="save-btn" onclick="saveProfile()">Update Profile</button>
+    </div>
+
+    <div class="sync-group">
+        <button class="sync-btn" onclick="exportData()">💾 Export</button>
+        <button class="sync-btn" onclick="document.getElementById('fileInput').click()">📂 Import</button>
+        <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
+    </div>
+</div>
+
+<script>
+    let currentDate = new Date('2026-01-04T00:00:00');
+    const scheduleData = {
+        'Sunday': { startTime: "07:00 AM", workout: "Joint Morning Session", wTip: "Go together! Team motivation.", breakfast: "Large Jamaican Breakfast", bTip: "Protein anchor 1st. 1 Dumpling max.", lunch: "Fruit / Light Snack", evening: "Family Stretch", dinner: "Family Dinner", dTime: "07:00 PM", dTip: "3 hours before bed.", isJoint: true },
+        'Monday': { startTime: "06:15 AM", workout: "Zing Gym (Upper)", wTip: "Push for 1 extra rep.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Eat eggs first.", lunch: "Baked Salmon + Salad", evening: "Evening Walk", dinner: "Brown Stew Chicken", dTime: "08:00 PM", dTip: "Load with extra cabbage." },
+        'Tuesday': { startTime: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Nasal breathing focus.", breakfast: "Saltfish & Veggies", bTip: "Extra okra/peppers.", lunch: "Yogurt + Shake", evening: "Evening Walk", dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Starch-free night." },
+        'Wednesday': { startTime: "06:15 AM", workout: "Zing Home (Lower)", wTip: "Squats burn the most calories.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Cinnamon helps insulin.", lunch: "Chicken Wrap", evening: "Evening Walk", dinner: "Steamed Fish + Okra", dTime: "08:00 PM", dTip: "2 crackers max." },
+        'Thursday': { startTime: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Steady cardio pace.", breakfast: "Cornmeal Porridge + 2 Eggs", bTip: "Whey after cooking.", lunch: "Tuna Salad", evening: "Evening Walk", dinner: "Curry Chicken + Rice", dTime: "08:00 PM", dTip: "Fist-sized rice portion." },
+        'Friday': { startTime: "06:15 AM", workout: "Zing Gym (Power)", wTip: "Intensity up to finish week.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Stay clean today.", lunch: "Baked Salmon + Salad", evening: null, dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "0 starch goal." },
+        'Saturday': { startTime: "07:00 AM", workout: "Joint Walk/Run", wTip: "Weekend pace. Enjoy the air.", breakfast: "Light Porridge", bTip: "Keep it light before church.", lunch: "Family Style Lunch", evening: null, dinner: "Eat Out / Dine In", dTime: "08:00 PM", dTip: "Baked wings or 2 pizza slices.", isJoint: true }
+    };
+
+    function renderWeek() {
+        const strip = document.getElementById('weekStrip'); strip.innerHTML = '';
+        const startOfWeek = new Date(currentDate); startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
+            const btn = document.createElement('button');
+            btn.className = `day-node ${d.toDateString() === currentDate.toDateString() ? 'active' : ''}`;
+            btn.onclick = () => { currentDate = d; renderWeek(); updateTimeline(); };
+            btn.innerHTML = `${d.toLocaleDateString('en-US', {weekday:'short'})}<span>${d.getDate()}</span>`;
+            strip.appendChild(btn);
+        }
+    }
+
+    function updateTimeline() {
+        const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+        document.getElementById('dayDisplay').innerText = `${dayName}, ${currentDate.toLocaleDateString('en-US', {month:'long', day:'numeric'})}`;
+        const plan = scheduleData[dayName] || scheduleData['Monday'];
+        const isWeekend = (dayName === 'Saturday' || dayName === 'Sunday');
+        
+        let html = renderItem(plan.startTime, "Pre", "Oxyshred + Water", "oxy", "var(--orange)", "pre-card", "Ignition switch.");
+        html += renderItem(isWeekend ? "07:15 AM" : "06:30 AM", plan.isJoint ? "Joint Victory" : "Activity", plan.workout, "act", plan.isJoint ? "var(--pink)" : "var(--blue)", plan.isJoint ? "joint-card" : "activity-card", plan.wTip);
+        html += renderItem(isWeekend ? "09:30 AM" : "09:15 AM", "Nutrition", plan.breakfast, "break", "var(--primary)", "nutrition-card", plan.bTip);
+        html += renderItem("12:30 PM", "Nutrition", plan.lunch, "lunch", "var(--primary)", "nutrition-card", "Hydrate 15m before.");
+        if (plan.evening) html += renderItem("06:15 PM", "Activity", plan.evening, "eve", "var(--blue)", "activity-card", plan.eTip || "Stops night cravings.");
+        html += renderItem(plan.dTime, "Nutrition", plan.dinner, "dinner", "var(--primary)", "nutrition-card", plan.dTip);
+        html += `<div class="timeline-item warning-card"><div class="time-label">10:00 PM</div><div><span class="type-badge" style="background:var(--danger)">Rule</span><label style="display:flex;align-items:center;margin-top:5px;"><input type="checkbox" class="daily-check" id="no_cereal" onchange="checkBadge()"><div style="margin-left:10px"><b>NO LATE CEREAL</b></div></label><div class="coach-tip">💡 Alts: Greek Yogurt or Almonds.</div></div></div>`;
+        document.getElementById('timelineContainer').innerHTML = html;
+        loadDailyLog();
+    }
+
+    function renderItem(time, type, title, id, color, card, tip) {
+        return `<div class="timeline-item ${card}"><div class="time-label">${time}</div><div><span class="type-badge" style="background:${color}">${type}</span><label style="display:flex; align-items:center; margin-top:5px;"><input type="checkbox" class="daily-check" id="${id}" onchange="checkBadge()"><div style="margin-left:10px"><b>${title}</b></div></label><div class="coach-tip">💡 ${tip}</div></div></div>`;
+    }
+
+    function checkBadge() {
+        const allChecked = Array.from(document.querySelectorAll('.daily-check')).every(c => c.checked);
+        document.getElementById('successBadge').style.display = allChecked ? 'block' : 'none';
+    }
+
+    function saveProfile() {
+        const p = { name: document.getElementById('userName').value, start: document.getElementById('startWeight').value, target: document.getElementById('targetWeight').value };
+        localStorage.setItem('g180_profile', JSON.stringify(p));
+        localStorage.setItem('aw_vfinal', JSON.stringify([parseFloat(p.start)]));
+        location.reload();
+    }
+
+    function loadProfile() {
+        const p = JSON.parse(localStorage.getItem('g180_profile'));
+        if(p) {
+            document.getElementById('userName').value = p.name;
+            document.getElementById('startWeight').value = p.start;
+            document.getElementById('targetWeight').value = p.target;
+            document.getElementById('userHeader').innerText = `${p.name}'s Goal ${p.target} Dashboard`;
+        }
+    }
+
+    function switchTab(e, n) { document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(n).style.display='block'; e.currentTarget.classList.add('active'); if(n==='stats') renderChart(); }
+    function changeWeek(days) { currentDate.setDate(currentDate.getDate() + days); renderWeek(); updateTimeline(); }
+    function saveDailyLog() { const history = JSON.parse(localStorage.getItem('g180_final')) || {}; const data = {}; document.querySelectorAll('.daily-check').forEach(c=>data[c.id]=c.checked); history[currentDate.toDateString()] = data; localStorage.setItem('g180_final', JSON.stringify(history)); alert('Log Saved!'); }
+    function loadDailyLog() { const history = JSON.parse(localStorage.getItem('g180_final')) || {}; const data = history[currentDate.toDateString()] || {}; document.querySelectorAll('.daily-check').forEach(c=>c.checked=data[c.id]||false); checkBadge(); }
+    function exportData() { const data = { profile: localStorage.getItem('g180_profile'), logs: localStorage.getItem('g180_final'), weights: localStorage.getItem('aw_vfinal') }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Goal180_Export.json'; a.click(); }
+    function importData(event) { const reader = new FileReader(); reader.onload = (e) => { const data = JSON.parse(e.target.result); localStorage.setItem('g180_profile', data.profile); localStorage.setItem('g180_final', data.logs); localStorage.setItem('aw_vfinal', data.weights); location.reload(); }; reader.readAsText(event.target.files[0]); }
+    function updateWeight() { const val = parseFloat(document.getElementById('weightInput').value); if(val) { const w = JSON.parse(localStorage.getItem('aw_vfinal')) || []; w.push(val); localStorage.setItem('aw_vfinal', JSON.stringify(w)); renderChart(); } }
+    
+    let myChart;
+    function renderChart() {
+        const ctx = document.getElementById('weightChart'); if(!ctx) return;
+        const weights = JSON.parse(localStorage.getItem('aw_vfinal')) || [];
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels: weights.map((_, i) => 'Wk' + i), datasets: [{ label: 'Weight', data: weights, borderColor: '#009b3a', tension: 0.3 }] }, options: { scales: { y: { suggestedMin: 150 } } } });
+    }
+    window.onload = () => { loadProfile(); renderWeek(); updateTimeline(); };
+</script>
+</body>
+</html>
