@@ -7,51 +7,49 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #009b3a; --secondary: #fed100; --dark: #000000; --light: #f4f4f4; --danger: #d9534f; --blue: #2e59a8; --orange: #ff8c00; --pink: #e91e63; }
+        :root { --primary: #009b3a; --primary-dark: #007a2d; --secondary: #fed100; --dark: #000000; --light: #f4f4f4; --danger: #d9534f; --blue: #2e59a8; --orange: #ff8c00; --pink: #e91e63; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 10px; padding-bottom: 80px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
         header { text-align: center; border-bottom: 5px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
         
         #successBadge { display: none; position: absolute; top: -10px; right: -10px; background: var(--secondary); color: var(--dark); padding: 12px; border-radius: 50%; font-weight: bold; border: 4px solid var(--primary); transform: rotate(15deg); box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 100; text-align: center; line-height: 1.1; font-size: 0.8em; }
 
-        /* Responsive Navigation Logic */
+        /* Responsive Navigation */
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #eee; padding: 8px; border-radius: 12px; }
         .tab-btn { flex: 1; padding: 10px; border: none; background: white; cursor: pointer; font-weight: bold; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.3s; }
         .tab-btn.active { background: var(--dark); color: white; }
-        .tab-label { display: inline; }
 
         @media (max-width: 600px) {
             .tabs { position: fixed; bottom: 0; left: 0; right: 0; margin-bottom: 0; border-radius: 0; background: var(--dark); padding: 10px 0; z-index: 1000; }
             .tab-btn { background: none; color: #888; flex-direction: column; font-size: 0.65em; }
             .tab-btn.active { color: var(--secondary); background: none; }
-            .tab-label { display: block; margin-top: 3px; }
-            .tab-btn i { font-size: 1.4em; }
             body { padding-bottom: 100px; }
         }
 
-        /* Day Navigation Controls */
+        /* Day Navigation with Hover Effects */
         .nav-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 15px; background: #f0f0f0; padding: 10px; border-radius: 12px; }
         .week-strip { display: flex; flex: 1; justify-content: space-between; gap: 5px; }
-        .day-node { flex: 1; padding: 8px 4px; border: 2px solid transparent; background: white; border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s; color: #666; font-size: 0.75em; }
-        .day-node span { display: block; font-weight: bold; font-size: 1.1em; }
-        .day-node.active { background: var(--dark) !important; color: white !important; border-color: var(--secondary) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        .arrow-btn { border:none; background:none; cursor:pointer; font-size: 1.2em; padding: 5px 10px; border-radius: 50%; transition: 0.2s; }
+        .arrow-btn:hover { background: #ddd; color: var(--primary); }
 
-        /* Timeline Items */
+        .day-node { flex: 1; padding: 8px 4px; border: 2.5px solid transparent; background: white; border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s; color: #666; font-size: 0.75em; }
+        .day-node:hover { background: #f9f9f9; transform: translateY(-2px); border-color: #ddd; }
+        .day-node span { display: block; font-weight: bold; font-size: 1.1em; }
+        
+        /* THE GREEN HIGHLIGHT FIX */
+        .day-node.active { background: var(--primary-dark) !important; color: white !important; border-color: var(--secondary) !important; box-shadow: 0 4px 10px rgba(0,122,45,0.3); }
+
         .timeline-item { display: grid; grid-template-columns: 80px 1fr; gap: 12px; margin-bottom: 10px; padding: 12px; border-radius: 10px; border-left: 5px solid #ccc; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-        .time-label { font-weight: bold; color: #555; font-size: 0.8em; display: flex; align-items: center; }
         .nutrition-card { border-left-color: var(--primary); background: #f0fdf4; }
         .activity-card { border-left-color: var(--blue); background: #f0f7ff; }
         .joint-card { border-left-color: var(--pink); background: #fff0f6; }
         .pre-card { border-left-color: var(--orange); background: #fff9f0; }
         .warning-card { border-left-color: var(--danger); background: #fff5f5; }
-        .coach-tip { font-size: 0.8em; color: #444; margin-top: 6px; border-top: 1px dashed #ddd; padding-top: 4px; font-style: italic; line-height: 1.3; }
+        .coach-tip { font-size: 0.8em; color: #444; margin-top: 6px; border-top: 1px dashed #ddd; padding-top: 4px; font-style: italic; }
 
-        /* Grocery View */
         .grocery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .grocery-cat { background: #fffbe6; padding: 12px; border-radius: 10px; border: 1px solid #ffe58f; }
-        .grocery-cat h4 { margin: 0 0 8px 0; color: #856404; font-size: 0.9em; border-bottom: 1px solid #ffe58f; }
-        .grocery-cat ul { padding-left: 15px; font-size: 0.85em; margin: 0; }
-
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .save-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
@@ -72,16 +70,16 @@
 
     <div id="log" class="tab-content active">
         <div class="nav-controls">
-            <button onclick="changeWeek(-7)" style="border:none; background:none; cursor:pointer;">◀</button>
+            <button class="arrow-btn" onclick="changeWeek(-7)">◀</button>
             <div class="week-strip" id="weekStrip"></div>
-            <button onclick="changeWeek(7)" style="border:none; background:none; cursor:pointer;">▶</button>
+            <button class="arrow-btn" onclick="changeWeek(7)">▶</button>
         </div>
         <div id="dayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:12px; font-size:1.1em;"></div>
         <div id="timelineContainer"></div>
         <button class="save-btn" onclick="saveDailyLog()">SAVE DAILY LOG</button>
         <div style="display:flex; gap:8px; margin-top:15px;">
-            <button onclick="exportData()" style="flex:1; padding:8px; font-size:0.7em; background:white; border:1px solid #ccc; border-radius:8px;">💾 EXPORT</button>
-            <button onclick="document.getElementById('fileInput').click()" style="flex:1; padding:8px; font-size:0.7em; background:white; border:1px solid #ccc; border-radius:8px;">📂 IMPORT</button>
+            <button onclick="exportData()" style="flex:1; padding:8px; font-size:0.7em; background:white; border:1px solid #ccc; border-radius:8px; cursor:pointer;">💾 EXPORT</button>
+            <button onclick="document.getElementById('fileInput').click()" style="flex:1; padding:8px; font-size:0.7em; background:white; border:1px solid #ccc; border-radius:8px; cursor:pointer;">📂 IMPORT</button>
             <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
         </div>
     </div>
@@ -99,22 +97,10 @@
     <div id="shop" class="tab-content">
         <h3>🛒 Goal 180 Staples</h3>
         <div class="grocery-grid">
-            <div class="grocery-cat">
-                <h4>🍎 Fruits & Snacks</h4>
-                <ul><li>Apples, Berries</li><li>Green Banana</li><li>Greek Yogurt</li><li>Raw Almonds</li></ul>
-            </div>
-            <div class="grocery-cat">
-                <h4>🍗 Proteins</h4>
-                <ul><li>Salmon, Saltfish</li><li>Chicken Breast</li><li>Eggs</li><li>Whey Protein</li></ul>
-            </div>
-            <div class="grocery-cat">
-                <h4>🥣 Pantry</h4>
-                <ul><li>Oats, Cornmeal</li><li>Rice, Peas</li><li>Almond Milk</li><li>Oxyshred</li></ul>
-            </div>
-            <div class="grocery-cat">
-                <h4>🥬 Veggies</h4>
-                <ul><li>Salad Mix</li><li>Okra, Callaloo</li><li>Cabbage</li><li>Yellow Yam</li></ul>
-            </div>
+            <div class="grocery-cat"><h4>🍎 Fruits & Snacks</h4><ul><li>Apples, Berries</li><li>Green Banana</li><li>Greek Yogurt</li><li>Raw Almonds</li></ul></div>
+            <div class="grocery-cat"><h4>🍗 Proteins</h4><ul><li>Salmon, Saltfish</li><li>Chicken Breast</li><li>Eggs</li><li>Whey Protein</li></ul></div>
+            <div class="grocery-cat"><h4>🥣 Pantry</h4><ul><li>Oats, Cornmeal</li><li>Rice, Peas</li><li>Almond Milk</li><li>Oxyshred</li></ul></div>
+            <div class="grocery-cat"><h4>🥬 Veggies</h4><ul><li>Salad Mix</li><li>Okra, Callaloo</li><li>Cabbage</li><li>Yellow Yam</li></ul></div>
         </div>
     </div>
 
@@ -128,17 +114,15 @@
 </div>
 
 <script>
-    // Logic to auto-set to Today's date on load
     let currentDate = new Date();
-    
     const scheduleData = {
-        'Sunday': { start: "07:00 AM", workout: "Joint Morning Session", wTip: "Fasted morning session. Push each other through the final 10 mins.", breakfast: "Large Jamaican Breakfast", bTip: "Eat your saltfish/ackee/liver first. Limit fried dumpling to ONE.", lunch: "Fruit / Light Snack", evening: "Family Stretch", dinner: "Family Style Dinner", dTime: "07:00 PM", dTip: "Early finish. Allow 3 hours before sleep for better metabolic rest.", isJoint: true },
-        'Monday': { start: "06:15 AM", workout: "Zing Gym (Upper Body)", wTip: "Focus on controlled reps. Planet Fitness day—get that strength work in.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Porridge is fuel, but eggs are the anchor. Protein first!", lunch: "Baked Salmon + Salad", evening: "Evening Walk", dinner: "Brown Stew Chicken", dTime: "08:00 PM", dTip: "Maximize cabbage and peppers. Use gravy sparingly over rice." },
-        'Tuesday': { start: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Target pace 9:30/mile. Focus on light footsteps and nasal breathing.", breakfast: "Saltfish & Veggies", bTip: "Veggies provide fiber volume. Limit bread to one thin slice.", lunch: "Yogurt + Protein Shake", evening: "Evening Walk", dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Starch-free tonight. Let your body incinerate fat while you sleep." },
-        'Wednesday': { start: "06:15 AM", workout: "Zing Home (Lower Body)", wTip: "Leg day focus. Squats and lunges engage the most muscle fibers.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Add cinnamon to oats—it naturally helps stabilize blood sugar.", lunch: "Chicken Wrap + Salad", evening: "Evening Walk", dinner: "Steamed Fish + Okra", dTime: "08:00 PM", dTip: "Light and filling. Okra fiber prevents late-night snack urges." },
-        'Thursday': { start: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Cardio consistency. Maintain a steady heart rate for fat burn.", breakfast: "Cornmeal Porridge + 2 Eggs", bTip: "Dense fuel day. Ensure protein is consumed before the cornmeal.", lunch: "Tuna Salad + Crackers", evening: "Evening Walk", dinner: "Curry Chicken + Rice", dTime: "08:00 PM", dTip: "Fist-sized portion of rice max. Load up on carrots and curry sauce." },
-        'Friday': { start: "06:15 AM", workout: "Zing Gym (Power Day)", wTip: "Maximum intensity session. Burn through the work week stress!", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Stay disciplined—Friday determines how you enter the weekend.", lunch: "Baked Salmon + Salad", evening: null, dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Final starch-free meal of the work week. Earn that Saturday lunch." },
-        'Saturday': { start: "07:00 AM", workout: "Joint Walk/Run (45m)", wTip: "Enjoy the weekend air. 30-45 mins of active recovery.", breakfast: "Light Porridge", bTip: "Keep it simple before church to maintain focus and energy.", lunch: "Family Style Lunch", evening: null, dinner: "Eat Out / Dine In", dTime: "08:00 PM", dTip: "Baked wings or 2 thin pizza slices. Side salad is mandatory.", isJoint: true }
+        'Sunday': { start: "07:00 AM", workout: "Joint Morning Session", wTip: "Go together! Fasted morning session pushes fat burn.", breakfast: "Large Jamaican Breakfast", bTip: "Eat saltfish/ackee first. Limit dumplings to ONE.", lunch: "Fruit / Light Snack", evening: "Family Stretch", dinner: "Family Style Dinner", dTime: "07:00 PM", dTip: "Early finish. 3 hours before sleep for metabolic rest.", isJoint: true },
+        'Monday': { start: "06:15 AM", workout: "Zing Gym (Upper Body)", wTip: "Focus on controlled reps. Planet Fitness day—get that strength work in.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Porridge is fuel, but eggs are the anchor. Protein first!", lunch: "Baked Salmon + Salad", evening: "Evening Walk", dinner: "Brown Stew Chicken", dTime: "08:00 PM", dTip: "Maximize cabbage. Use gravy sparingly over rice." },
+        'Tuesday': { start: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Target pace 9:30/mile. Focus on nasal breathing.", breakfast: "Saltfish & Veggies", bTip: "Veggies provide fiber. Limit bread to one thin slice.", lunch: "Yogurt + Shake", evening: "Evening Walk", dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Starch-free tonight. Let your body incinerate fat." },
+        'Wednesday': { start: "06:15 AM", workout: "Zing Home (Lower Body)", wTip: "Leg day focus. Squats engage the most muscle fibers.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Add cinnamon to oats to help stabilize blood sugar.", lunch: "Chicken Wrap + Salad", evening: "Evening Walk", dinner: "Steamed Fish + Okra", dTime: "08:00 PM", dTip: "Light and filling. Okra fiber stops snack urges." },
+        'Thursday': { start: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Cardio consistency. Maintain steady heart rate.", breakfast: "Cornmeal Porridge + 2 Eggs", bTip: "Protein before cornmeal.", lunch: "Tuna Salad + Crackers", evening: "Evening Walk", dinner: "Curry Chicken + Rice", dTime: "08:00 PM", dTip: "Fist-sized portion of rice max. Load up on curry sauce." },
+        'Friday': { start: "06:15 AM", workout: "Zing Gym (Power Day)", wTip: "Maximum intensity! Burn work week stress.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Friday determine how you enter the weekend.", lunch: "Baked Salmon + Salad", evening: null, dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Final starch-free meal. Earn that Saturday lunch." },
+        'Saturday': { start: "07:00 AM", workout: "Joint Walk/Run (45m)", wTip: "30-45 mins of active recovery.", breakfast: "Light Porridge", bTip: "Keep it light before church.", lunch: "Family Style Lunch", evening: null, dinner: "Eat Out / Dine In", dTime: "08:00 PM", dTip: "Baked wings or 2 thin pizza slices. Side salad is mandatory.", isJoint: true }
     };
 
     function renderWeek() {
@@ -163,10 +147,10 @@
         let html = renderItem(plan.start, "Pre", "Oxyshred + Water", "oxy", "var(--orange)", "pre-card", "Fasted cardio catalyst.");
         html += renderItem(isWknd ? "07:15 AM" : "06:30 AM", plan.isJoint ? "Joint Victory" : "Activity", plan.workout, "act", plan.isJoint ? "var(--pink)" : "var(--blue)", plan.isJoint ? "joint-card" : "activity-card", plan.wTip);
         html += renderItem(isWknd ? "09:30 AM" : "09:15 AM", "Nutrition", plan.breakfast, "break", "var(--primary)", "nutrition-card", plan.bTip);
-        html += renderItem("12:30 PM", "Nutrition", plan.lunch, "lunch", "var(--primary)", "nutrition-card", "Hydrate heavily 15m before eating.");
-        if (plan.evening) html += renderItem("06:15 PM", "Activity", plan.evening, "eve", "var(--blue)", "activity-card", plan.eveningTip || "Metabolic boost.");
+        html += renderItem("12:30 PM", "Nutrition", plan.lunch, "lunch", "var(--primary)", "nutrition-card", "Hydrate 15m before eating.");
+        if (plan.evening) html += renderItem("06:15 PM", "Activity", plan.evening, "eve", "var(--blue)", "activity-card", "Metabolic boost.");
         html += renderItem(plan.dTime || "08:00 PM", "Nutrition", plan.dinner, "dinner", "var(--primary)", "nutrition-card", plan.dTip);
-        html += `<div class="timeline-item warning-card"><div class="time-label">10:00 PM</div><div><label style="display:flex;align-items:center;margin-top:5px;"><input type="checkbox" class="daily-check" id="no_cereal" onchange="checkBadge()"><div style="margin-left:10px"><b>NO LATE CEREAL</b></div></label><div class="coach-tip">💡 Alts: Greek Yogurt, Raw Almonds, or Peppermint Tea.</div></div></div>`;
+        html += `<div class="timeline-item warning-card"><div class="time-label">10:00 PM</div><div><label style="display:flex;align-items:center;"><input type="checkbox" class="daily-check" id="no_cereal" onchange="checkBadge()"><div style="margin-left:10px"><b>NO LATE CEREAL</b></div></label><div class="coach-tip">💡 Alts: Greek Yogurt, Raw Almonds, or Peppermint Tea.</div></div></div>`;
         document.getElementById('timelineContainer').innerHTML = html;
         loadDailyLog();
     }
