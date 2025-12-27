@@ -3,158 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal 180 Coaching Dashboard</title>
+    <title>Goal 180 Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #009b3a; --secondary: #fed100; --dark: #000000; --light: #f4f4f4; --danger: #d9534f; --blue: #2e59a8; --orange: #ff8c00; --pink: #e91e63; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 15px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 10px; padding-bottom: 80px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
         header { text-align: center; border-bottom: 5px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px; }
         
-        #successBadge { display: none; position: absolute; top: -10px; right: -10px; background: var(--secondary); color: var(--dark); padding: 15px; border-radius: 50%; font-weight: bold; border: 4px solid var(--primary); transform: rotate(15deg); box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 100; text-align: center; line-height: 1.2; }
+        #successBadge { display: none; position: absolute; top: -10px; right: -10px; background: var(--secondary); color: var(--dark); padding: 12px; border-radius: 50%; font-weight: bold; border: 4px solid var(--primary); transform: rotate(15deg); box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 100; text-align: center; line-height: 1.1; font-size: 0.8em; }
 
-        .nav-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; background: #eee; padding: 10px; border-radius: 15px; }
-        .week-strip { display: flex; flex: 1; justify-content: space-between; gap: 5px; }
-        .day-node { flex: 1; padding: 8px 2px; border: none; background: white; border-radius: 10px; cursor: pointer; text-align: center; font-size: 0.8em; border: 2px solid transparent; }
-        .day-node span { display: block; font-weight: bold; font-size: 1.1em; }
-        .day-node.active { background: var(--primary); color: white; border-color: var(--secondary); }
-        .nav-btn { background: var(--dark); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
-        .tab-btn { flex: 1; min-width: 90px; padding: 12px; border: none; background: #ddd; cursor: pointer; font-weight: bold; border-radius: 10px; }
+        /* Responsive Navigation Logic */
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #eee; padding: 8px; border-radius: 12px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: white; cursor: pointer; font-weight: bold; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.3s; }
         .tab-btn.active { background: var(--dark); color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-label { display: inline; }
 
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        @media (max-width: 600px) {
+            .tabs { position: fixed; bottom: 0; left: 0; right: 0; margin-bottom: 0; border-radius: 0; background: var(--dark); padding: 10px 0; z-index: 1000; }
+            .tab-btn { background: none; color: #888; flex-direction: column; font-size: 0.65em; }
+            .tab-btn.active { color: var(--secondary); background: none; }
+            .tab-label { display: block; margin-top: 3px; }
+            .tab-btn i { font-size: 1.4em; }
+            body { padding-bottom: 100px; }
+        }
 
-        .timeline-item { display: grid; grid-template-columns: 85px 1fr; gap: 15px; margin-bottom: 12px; padding: 15px; border-radius: 12px; border-left: 6px solid #ccc; background: #fff; }
-        .time-label { font-weight: bold; color: #555; font-size: 0.85em; display: flex; align-items: center; }
+        /* Day Navigation Controls */
+        .nav-controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 15px; background: #f0f0f0; padding: 10px; border-radius: 12px; }
+        .week-strip { display: flex; flex: 1; justify-content: space-between; gap: 5px; }
+        .day-node { flex: 1; padding: 8px 4px; border: 2px solid transparent; background: white; border-radius: 10px; cursor: pointer; text-align: center; transition: 0.2s; color: #666; font-size: 0.75em; }
+        .day-node span { display: block; font-weight: bold; font-size: 1.1em; }
+        .day-node.active { background: var(--dark) !important; color: white !important; border-color: var(--secondary) !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        /* Timeline Items */
+        .timeline-item { display: grid; grid-template-columns: 80px 1fr; gap: 12px; margin-bottom: 10px; padding: 12px; border-radius: 10px; border-left: 5px solid #ccc; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+        .time-label { font-weight: bold; color: #555; font-size: 0.8em; display: flex; align-items: center; }
         .nutrition-card { border-left-color: var(--primary); background: #f0fdf4; }
         .activity-card { border-left-color: var(--blue); background: #f0f7ff; }
         .joint-card { border-left-color: var(--pink); background: #fff0f6; }
         .pre-card { border-left-color: var(--orange); background: #fff9f0; }
         .warning-card { border-left-color: var(--danger); background: #fff5f5; }
-        
-        .coach-tip { font-size: 0.85em; color: #444; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px; font-style: italic; }
-        .type-badge { font-size: 0.7em; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-bottom: 5px; display: inline-block; color: white; }
-        
-        .save-btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        
-        /* Grocery Grid */
-        .grocery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
-        .grocery-cat { background: #fffbe6; padding: 15px; border-radius: 12px; border: 1px solid #ffe58f; }
-        .grocery-cat h4 { margin-top: 0; color: #856404; border-bottom: 1px solid #ffe58f; padding-bottom: 5px; }
-        .grocery-cat ul { padding-left: 20px; font-size: 0.9em; }
-        
-        .sync-group { display: flex; gap: 10px; margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
-        .sync-btn { flex: 1; padding: 10px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8em; }
+        .coach-tip { font-size: 0.8em; color: #444; margin-top: 6px; border-top: 1px dashed #ddd; padding-top: 4px; font-style: italic; line-height: 1.3; }
+
+        /* Grocery View */
+        .grocery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .grocery-cat { background: #fffbe6; padding: 12px; border-radius: 10px; border: 1px solid #ffe58f; }
+        .grocery-cat h4 { margin: 0 0 8px 0; color: #856404; font-size: 0.9em; border-bottom: 1px solid #ffe58f; }
+        .grocery-cat ul { padding-left: 15px; font-size: 0.85em; margin: 0; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .save-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="successBadge">🏆<br>GOAL 180<br>CHAMP</div>
-    <header><h1 id="userHeader">Goal 180 Dashboard</h1></header>
+    <div id="successBadge">🏆<br>CHAMP</div>
+    <header><h1 id="userHeader" style="font-size: 1.3em; margin: 0;">Goal 180 Dashboard</h1></header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab(event, 'log')">Timeline</button>
-        <button class="tab-btn" onclick="switchTab(event, 'stats')">Weight</button>
-        <button class="tab-btn" onclick="switchTab(event, 'shop')">Shopping</button>
-        <button class="tab-btn" onclick="switchTab(event, 'profile')">Profile</button>
+        <button class="tab-btn active" onclick="switchTab(event, 'log')"><i class="fas fa-list-ul"></i><span class="tab-label">Timeline</span></button>
+        <button class="tab-btn" onclick="switchTab(event, 'stats')"><i class="fas fa-chart-line"></i><span class="tab-label">Weight</span></button>
+        <button class="tab-btn" onclick="switchTab(event, 'shop')"><i class="fas fa-shopping-basket"></i><span class="tab-label">Shopping</span></button>
+        <button class="tab-btn" onclick="switchTab(event, 'profile')"><i class="fas fa-user-circle"></i><span class="tab-label">Profile</span></button>
     </div>
 
     <div id="log" class="tab-content active">
         <div class="nav-controls">
-            <button class="nav-btn" onclick="changeWeek(-7)">◀</button>
+            <button onclick="changeWeek(-7)" style="border:none; background:none; cursor:pointer;">◀</button>
             <div class="week-strip" id="weekStrip"></div>
-            <button class="nav-btn" onclick="changeWeek(7)">▶</button>
+            <button onclick="changeWeek(7)" style="border:none; background:none; cursor:pointer;">▶</button>
         </div>
-        <div id="dayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:10px; font-size: 1.2em;"></div>
+        <div id="dayDisplay" style="text-align:center; font-weight:bold; color:var(--primary); margin-bottom:12px; font-size:1.1em;"></div>
         <div id="timelineContainer"></div>
-        <button class="save-btn" onclick="saveDailyLog()">Save Progress</button>
+        <button class="save-btn" onclick="saveDailyLog()">SAVE DAILY LOG</button>
+        <div style="display:flex; gap:8px; margin-top:15px;">
+            <button onclick="exportData()" style="flex:1; padding:8px; font-size:0.7em; background:white; border:1px solid #ccc; border-radius:8px;">💾 EXPORT</button>
+            <button onclick="document.getElementById('fileInput').click()" style="flex:1; padding:8px; font-size:0.7em; background:white; border:1px solid #ccc; border-radius:8px;">📂 IMPORT</button>
+            <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
+        </div>
     </div>
 
     <div id="stats" class="tab-content">
-        <div style="padding:20px; background:white; border-radius:15px; border:1px solid #eee;">
-            <h3>📈 Weight Progress</h3>
+        <div style="padding:15px; background:white; border-radius:12px; border:1px solid #eee;">
             <canvas id="weightChart"></canvas>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <input type="number" id="weightInput" placeholder="New Lbs" step="0.1" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ccc;">
-                <button onclick="updateWeight()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:10px;">Log</button>
+            <div style="display:flex; gap:8px; margin-top:15px;">
+                <input type="number" id="weightInput" placeholder="Lbs" step="0.1" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                <button onclick="updateWeight()" style="padding:10px 15px; background:var(--primary); color:white; border:none; border-radius:8px;">LOG</button>
             </div>
         </div>
     </div>
 
     <div id="shop" class="tab-content">
-        <h3>🛒 Goal 180 Grocery Staples</h3>
+        <h3>🛒 Goal 180 Staples</h3>
         <div class="grocery-grid">
             <div class="grocery-cat">
                 <h4>🍎 Fruits & Snacks</h4>
-                <ul>
-                    <li>Apples & Berries (Fiber)</li>
-                    <li>Green Bananas (Starch)</li>
-                    <li>Greek Yogurt (Plain)</li>
-                    <li>Raw Almonds (Crunch)</li>
-                </ul>
+                <ul><li>Apples, Berries</li><li>Green Banana</li><li>Greek Yogurt</li><li>Raw Almonds</li></ul>
             </div>
             <div class="grocery-cat">
                 <h4>🍗 Proteins</h4>
-                <ul>
-                    <li>Salmon & Saltfish</li>
-                    <li>Chicken Breast</li>
-                    <li>Eggs (Cage Free)</li>
-                    <li>ON Whey Protein</li>
-                </ul>
+                <ul><li>Salmon, Saltfish</li><li>Chicken Breast</li><li>Eggs</li><li>Whey Protein</li></ul>
             </div>
             <div class="grocery-cat">
                 <h4>🥣 Pantry</h4>
-                <ul>
-                    <li>Cornmeal & Quick Oats</li>
-                    <li>Brown Rice & Red Peas</li>
-                    <li>Unsweetened Almond Milk</li>
-                    <li>Oxyshred Mango</li>
-                </ul>
+                <ul><li>Oats, Cornmeal</li><li>Rice, Peas</li><li>Almond Milk</li><li>Oxyshred</li></ul>
             </div>
             <div class="grocery-cat">
                 <h4>🥬 Veggies</h4>
-                <ul>
-                    <li>Spring Salad Mix</li>
-                    <li>Okra & Callaloo</li>
-                    <li>Cabbage & Peppers</li>
-                    <li>Yellow Yam</li>
-                </ul>
+                <ul><li>Salad Mix</li><li>Okra, Callaloo</li><li>Cabbage</li><li>Yellow Yam</li></ul>
             </div>
         </div>
     </div>
 
     <div id="profile" class="tab-content">
-        <h3>👤 Profile Settings</h3>
-        <div class="form-group"><label>Name</label><input type="text" id="userName"></div>
-        <div class="form-group"><label>Starting Weight (lbs)</label><input type="number" id="startWeight"></div>
-        <div class="form-group"><label>Target Weight (lbs)</label><input type="number" id="targetWeight"></div>
-        <button class="save-btn" onclick="saveProfile()">Update Profile</button>
-    </div>
-
-    <div class="sync-group">
-        <button class="sync-btn" onclick="exportData()">💾 Export</button>
-        <button class="sync-btn" onclick="document.getElementById('fileInput').click()">📂 Import</button>
-        <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
+        <h3>👤 Profile</h3>
+        <input type="text" id="userName" placeholder="Name" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
+        <input type="number" id="startWeight" placeholder="Start Lbs" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc;">
+        <input type="number" id="targetWeight" placeholder="Target Lbs" style="width:100%; padding:10px; margin-bottom:20px; border-radius:8px; border:1px solid #ccc;">
+        <button class="save-btn" onclick="saveProfile()">INITIALIZE PLAN</button>
     </div>
 </div>
 
 <script>
-    let currentDate = new Date('2026-01-04T00:00:00');
+    // Logic to auto-set to Today's date on load
+    let currentDate = new Date();
+    
     const scheduleData = {
-        'Sunday': { startTime: "07:00 AM", workout: "Joint Morning Session", wTip: "Go together! Team motivation.", breakfast: "Large Jamaican Breakfast", bTip: "Protein anchor 1st. 1 Dumpling max.", lunch: "Fruit / Light Snack", evening: "Family Stretch", dinner: "Family Dinner", dTime: "07:00 PM", dTip: "3 hours before bed.", isJoint: true },
-        'Monday': { startTime: "06:15 AM", workout: "Zing Gym (Upper)", wTip: "Push for 1 extra rep.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Eat eggs first.", lunch: "Baked Salmon + Salad", evening: "Evening Walk", dinner: "Brown Stew Chicken", dTime: "08:00 PM", dTip: "Load with extra cabbage." },
-        'Tuesday': { startTime: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Nasal breathing focus.", breakfast: "Saltfish & Veggies", bTip: "Extra okra/peppers.", lunch: "Yogurt + Shake", evening: "Evening Walk", dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Starch-free night." },
-        'Wednesday': { startTime: "06:15 AM", workout: "Zing Home (Lower)", wTip: "Squats burn the most calories.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Cinnamon helps insulin.", lunch: "Chicken Wrap", evening: "Evening Walk", dinner: "Steamed Fish + Okra", dTime: "08:00 PM", dTip: "2 crackers max." },
-        'Thursday': { startTime: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Steady cardio pace.", breakfast: "Cornmeal Porridge + 2 Eggs", bTip: "Whey after cooking.", lunch: "Tuna Salad", evening: "Evening Walk", dinner: "Curry Chicken + Rice", dTime: "08:00 PM", dTip: "Fist-sized rice portion." },
-        'Friday': { startTime: "06:15 AM", workout: "Zing Gym (Power)", wTip: "Intensity up to finish week.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Stay clean today.", lunch: "Baked Salmon + Salad", evening: null, dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "0 starch goal." },
-        'Saturday': { startTime: "07:00 AM", workout: "Joint Walk/Run", wTip: "Weekend pace. Enjoy the air.", breakfast: "Light Porridge", bTip: "Keep it light before church.", lunch: "Family Style Lunch", evening: null, dinner: "Eat Out / Dine In", dTime: "08:00 PM", dTip: "Baked wings or 2 pizza slices.", isJoint: true }
+        'Sunday': { start: "07:00 AM", workout: "Joint Morning Session", wTip: "Fasted morning session. Push each other through the final 10 mins.", breakfast: "Large Jamaican Breakfast", bTip: "Eat your saltfish/ackee/liver first. Limit fried dumpling to ONE.", lunch: "Fruit / Light Snack", evening: "Family Stretch", dinner: "Family Style Dinner", dTime: "07:00 PM", dTip: "Early finish. Allow 3 hours before sleep for better metabolic rest.", isJoint: true },
+        'Monday': { start: "06:15 AM", workout: "Zing Gym (Upper Body)", wTip: "Focus on controlled reps. Planet Fitness day—get that strength work in.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Porridge is fuel, but eggs are the anchor. Protein first!", lunch: "Baked Salmon + Salad", evening: "Evening Walk", dinner: "Brown Stew Chicken", dTime: "08:00 PM", dTip: "Maximize cabbage and peppers. Use gravy sparingly over rice." },
+        'Tuesday': { start: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Target pace 9:30/mile. Focus on light footsteps and nasal breathing.", breakfast: "Saltfish & Veggies", bTip: "Veggies provide fiber volume. Limit bread to one thin slice.", lunch: "Yogurt + Protein Shake", evening: "Evening Walk", dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Starch-free tonight. Let your body incinerate fat while you sleep." },
+        'Wednesday': { start: "06:15 AM", workout: "Zing Home (Lower Body)", wTip: "Leg day focus. Squats and lunges engage the most muscle fibers.", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Add cinnamon to oats—it naturally helps stabilize blood sugar.", lunch: "Chicken Wrap + Salad", evening: "Evening Walk", dinner: "Steamed Fish + Okra", dTime: "08:00 PM", dTip: "Light and filling. Okra fiber prevents late-night snack urges." },
+        'Thursday': { start: "06:15 AM", workout: "3.11 Mile Run (5K)", wTip: "Cardio consistency. Maintain a steady heart rate for fat burn.", breakfast: "Cornmeal Porridge + 2 Eggs", bTip: "Dense fuel day. Ensure protein is consumed before the cornmeal.", lunch: "Tuna Salad + Crackers", evening: "Evening Walk", dinner: "Curry Chicken + Rice", dTime: "08:00 PM", dTip: "Fist-sized portion of rice max. Load up on carrots and curry sauce." },
+        'Friday': { start: "06:15 AM", workout: "Zing Gym (Power Day)", wTip: "Maximum intensity session. Burn through the work week stress!", breakfast: "Oatmeal Porridge + 2 Eggs", bTip: "Stay disciplined—Friday determines how you enter the weekend.", lunch: "Baked Salmon + Salad", evening: null, dinner: "Baked Chicken + Salad", dTime: "08:00 PM", dTip: "Final starch-free meal of the work week. Earn that Saturday lunch." },
+        'Saturday': { start: "07:00 AM", workout: "Joint Walk/Run (45m)", wTip: "Enjoy the weekend air. 30-45 mins of active recovery.", breakfast: "Light Porridge", bTip: "Keep it simple before church to maintain focus and energy.", lunch: "Family Style Lunch", evening: null, dinner: "Eat Out / Dine In", dTime: "08:00 PM", dTip: "Baked wings or 2 thin pizza slices. Side salad is mandatory.", isJoint: true }
     };
 
     function renderWeek() {
@@ -162,38 +146,46 @@
         const startOfWeek = new Date(currentDate); startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
         for (let i = 0; i < 7; i++) {
             const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
-            const btn = document.createElement('button');
-            btn.className = `day-node ${d.toDateString() === currentDate.toDateString() ? 'active' : ''}`;
-            btn.onclick = () => { currentDate = d; renderWeek(); updateTimeline(); };
-            btn.innerHTML = `${d.toLocaleDateString('en-US', {weekday:'short'})}<span>${d.getDate()}</span>`;
-            strip.appendChild(btn);
+            const isSel = d.toDateString() === currentDate.toDateString();
+            const node = document.createElement('div');
+            node.className = `day-node ${isSel ? 'active' : ''}`;
+            node.onclick = () => { currentDate = d; renderWeek(); updateTimeline(); };
+            node.innerHTML = `<div>${d.toLocaleDateString('en-US', {weekday:'short'})}</div><span>${d.getDate()}</span>`;
+            strip.appendChild(node);
         }
     }
 
     function updateTimeline() {
         const dayName = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
-        document.getElementById('dayDisplay').innerText = `${dayName}, ${currentDate.toLocaleDateString('en-US', {month:'long', day:'numeric'})}`;
+        document.getElementById('dayDisplay').innerText = `${dayName}, ${currentDate.toLocaleDateString('en-US', {month:'short', day:'numeric'})}`;
         const plan = scheduleData[dayName] || scheduleData['Monday'];
-        const isWeekend = (dayName === 'Saturday' || dayName === 'Sunday');
-        
-        let html = renderItem(plan.startTime, "Pre", "Oxyshred + Water", "oxy", "var(--orange)", "pre-card", "Ignition switch.");
-        html += renderItem(isWeekend ? "07:15 AM" : "06:30 AM", plan.isJoint ? "Joint Victory" : "Activity", plan.workout, "act", plan.isJoint ? "var(--pink)" : "var(--blue)", plan.isJoint ? "joint-card" : "activity-card", plan.wTip);
-        html += renderItem(isWeekend ? "09:30 AM" : "09:15 AM", "Nutrition", plan.breakfast, "break", "var(--primary)", "nutrition-card", plan.bTip);
-        html += renderItem("12:30 PM", "Nutrition", plan.lunch, "lunch", "var(--primary)", "nutrition-card", "Hydrate 15m before.");
-        if (plan.evening) html += renderItem("06:15 PM", "Activity", plan.evening, "eve", "var(--blue)", "activity-card", plan.eTip || "Stops night cravings.");
-        html += renderItem(plan.dTime, "Nutrition", plan.dinner, "dinner", "var(--primary)", "nutrition-card", plan.dTip);
-        html += `<div class="timeline-item warning-card"><div class="time-label">10:00 PM</div><div><span class="type-badge" style="background:var(--danger)">Rule</span><label style="display:flex;align-items:center;margin-top:5px;"><input type="checkbox" class="daily-check" id="no_cereal" onchange="checkBadge()"><div style="margin-left:10px"><b>NO LATE CEREAL</b></div></label><div class="coach-tip">💡 Alts: Greek Yogurt or Almonds.</div></div></div>`;
+        const isWknd = (dayName === 'Saturday' || dayName === 'Sunday');
+        let html = renderItem(plan.start, "Pre", "Oxyshred + Water", "oxy", "var(--orange)", "pre-card", "Fasted cardio catalyst.");
+        html += renderItem(isWknd ? "07:15 AM" : "06:30 AM", plan.isJoint ? "Joint Victory" : "Activity", plan.workout, "act", plan.isJoint ? "var(--pink)" : "var(--blue)", plan.isJoint ? "joint-card" : "activity-card", plan.wTip);
+        html += renderItem(isWknd ? "09:30 AM" : "09:15 AM", "Nutrition", plan.breakfast, "break", "var(--primary)", "nutrition-card", plan.bTip);
+        html += renderItem("12:30 PM", "Nutrition", plan.lunch, "lunch", "var(--primary)", "nutrition-card", "Hydrate heavily 15m before eating.");
+        if (plan.evening) html += renderItem("06:15 PM", "Activity", plan.evening, "eve", "var(--blue)", "activity-card", plan.eveningTip || "Metabolic boost.");
+        html += renderItem(plan.dTime || "08:00 PM", "Nutrition", plan.dinner, "dinner", "var(--primary)", "nutrition-card", plan.dTip);
+        html += `<div class="timeline-item warning-card"><div class="time-label">10:00 PM</div><div><label style="display:flex;align-items:center;margin-top:5px;"><input type="checkbox" class="daily-check" id="no_cereal" onchange="checkBadge()"><div style="margin-left:10px"><b>NO LATE CEREAL</b></div></label><div class="coach-tip">💡 Alts: Greek Yogurt, Raw Almonds, or Peppermint Tea.</div></div></div>`;
         document.getElementById('timelineContainer').innerHTML = html;
         loadDailyLog();
     }
 
     function renderItem(time, type, title, id, color, card, tip) {
-        return `<div class="timeline-item ${card}"><div class="time-label">${time}</div><div><span class="type-badge" style="background:${color}">${type}</span><label style="display:flex; align-items:center; margin-top:5px;"><input type="checkbox" class="daily-check" id="${id}" onchange="checkBadge()"><div style="margin-left:10px"><b>${title}</b></div></label><div class="coach-tip">💡 ${tip}</div></div></div>`;
+        return `<div class="timeline-item ${card}"><div class="time-label">${time}</div><div><span style="font-size:0.6em; background:${color}; color:white; padding:2px 8px; border-radius:10px; font-weight:bold;">${type}</span><label style="display:flex; align-items:center; margin-top:4px;"><input type="checkbox" class="daily-check" id="${id}" onchange="checkBadge()"><div style="margin-left:10px"><b>${title}</b></div></label><div class="coach-tip">💡 ${tip}</div></div></div>`;
     }
 
     function checkBadge() {
-        const allChecked = Array.from(document.querySelectorAll('.daily-check')).every(c => c.checked);
-        document.getElementById('successBadge').style.display = allChecked ? 'block' : 'none';
+        const all = Array.from(document.querySelectorAll('.daily-check')).every(c => c.checked);
+        document.getElementById('successBadge').style.display = all ? 'block' : 'none';
+    }
+
+    function switchTab(e, n) { 
+        document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(n).style.display='block';
+        e.currentTarget.classList.add('active');
+        if(n==='stats') renderChart();
     }
 
     function saveProfile() {
@@ -209,16 +201,13 @@
             document.getElementById('userName').value = p.name;
             document.getElementById('startWeight').value = p.start;
             document.getElementById('targetWeight').value = p.target;
-            document.getElementById('userHeader').innerText = `${p.name}'s Goal ${p.target} Dashboard`;
+            document.getElementById('userHeader').innerText = `${p.name}'s Goal ${p.target} Plan`;
         }
     }
 
-    function switchTab(e, n) { document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none'); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(n).style.display='block'; e.currentTarget.classList.add('active'); if(n==='stats') renderChart(); }
     function changeWeek(days) { currentDate.setDate(currentDate.getDate() + days); renderWeek(); updateTimeline(); }
     function saveDailyLog() { const history = JSON.parse(localStorage.getItem('g180_final')) || {}; const data = {}; document.querySelectorAll('.daily-check').forEach(c=>data[c.id]=c.checked); history[currentDate.toDateString()] = data; localStorage.setItem('g180_final', JSON.stringify(history)); alert('Log Saved!'); }
     function loadDailyLog() { const history = JSON.parse(localStorage.getItem('g180_final')) || {}; const data = history[currentDate.toDateString()] || {}; document.querySelectorAll('.daily-check').forEach(c=>c.checked=data[c.id]||false); checkBadge(); }
-    function exportData() { const data = { profile: localStorage.getItem('g180_profile'), logs: localStorage.getItem('g180_final'), weights: localStorage.getItem('aw_vfinal') }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Goal180_Export.json'; a.click(); }
-    function importData(event) { const reader = new FileReader(); reader.onload = (e) => { const data = JSON.parse(e.target.result); localStorage.setItem('g180_profile', data.profile); localStorage.setItem('g180_final', data.logs); localStorage.setItem('aw_vfinal', data.weights); location.reload(); }; reader.readAsText(event.target.files[0]); }
     function updateWeight() { const val = parseFloat(document.getElementById('weightInput').value); if(val) { const w = JSON.parse(localStorage.getItem('aw_vfinal')) || []; w.push(val); localStorage.setItem('aw_vfinal', JSON.stringify(w)); renderChart(); } }
     
     let myChart;
@@ -228,6 +217,10 @@
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels: weights.map((_, i) => 'Wk' + i), datasets: [{ label: 'Weight', data: weights, borderColor: '#009b3a', tension: 0.3 }] }, options: { scales: { y: { suggestedMin: 150 } } } });
     }
+
+    function exportData() { const data = { profile: localStorage.getItem('g180_profile'), logs: localStorage.getItem('g180_final'), weights: localStorage.getItem('aw_vfinal') }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Goal180_Data.json'; a.click(); }
+    function importData(event) { const reader = new FileReader(); reader.onload = (e) => { const d = JSON.parse(e.target.result); localStorage.setItem('g180_profile', d.profile); localStorage.setItem('g180_final', d.logs); localStorage.setItem('aw_vfinal', d.weights); location.reload(); }; reader.readAsText(event.target.files[0]); }
+
     window.onload = () => { loadProfile(); renderWeek(); updateTimeline(); };
 </script>
 </body>
